@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WAF Admin Panel</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        .container {
+            background-color: white;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .changed {
+            background-color: #ffffcc;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button.danger {
+            background-color: #f44336;
+        }
+        .flash {
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .flash.success {
+            background-color: #dff0d8;
+            color: #3c763d;
+        }
+        .flash.error {
+            background-color: #f2dede;
+            color: #a94442;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .nav {
+            display: flex;
+            background-color: #333;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .nav a {
+            color: white;
+            padding: 10px 15px;
+            text-decoration: none;
+            margin-right: 5px;
+        }
+        .nav a:hover {
+            background-color: #555;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="nav">
+        <a href="/">Home</a>
+        <a href="/view_blocked_ips">View Blocked IPs</a>
+    </div>
+    
+    <h1>WAF Admin Panel</h1>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash {{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    <div class="container">
+        <h2>Security Settings</h2>
+        <form action="/update_settings" method="post">
+            {% for key, value in settings.items() %}
+                <div class="form-group">
+                    <label for="{{ key }}">{{ key }}:</label>
+                    {% if key in original_values and original_values[key] != value %}
+                        {% set changed = 'changed' %}
+                    {% else %}
+                        {% set changed = '' %}
+                    {% endif %}
+                    
+                    {% if value is string %}
+                        <input type="text" id="{{ key }}" name="{{ key }}" value="{{ value }}" class="{{ changed }}">
+                    {% elif value is integer or value is float %}
+                        <input type="number" id="{{ key }}" name="{{ key }}" value="{{ value }}" class="{{ changed }}">
+                    {% elif value is boolean %}
+                        <select id="{{ key }}" name="{{ key }}" class="{{ changed }}">
+                            <option value="True" {% if value %}selected{% endif %}>True</option>
+                            <option value="False" {% if not value %}selected{% endif %}>False</option>
+                        </select>
+                    {% elif value is iterable and value is not string %}
+                        <input type="text" id="{{ key }}" name="{{ key }}" value="{{ value|join(', ') }}" class="{{ changed }}">
+                    {% else %}
+                        <input type="text" id="{{ key }}" name="{{ key }}" value="{{ value }}" class="{{ changed }}">
+                    {% endif %}
+                </div>
+            {% endfor %}
+            <button type="submit">Update Settings</button>
+        </form>
+    </div>
+    
+    <div class="container">
+        <h2>Log Management</h2>
+        <p>Current log sizes:</p>
+        <table>
+            <tr>
+                <th>Log Type</th>
+                <th>Size</th>
+            </tr>
+            <tr>
+                <td>Request Log</td>
+                <td>{{ log_sizes.requests }}</td>
+            </tr>
+            <tr>
+                <td>Response Log</td>
+                <td>{{ log_sizes.responses }}</td>
+            </tr>
+            <tr>
+                <td>PCAP Log</td>
+                <td>{{ log_sizes.pcap }}</td>
+            </tr>
+            <tr>
+                <td>Blocked IPs File</td>
+                <td>{{ log_sizes.blocked_ips }}</td>
+            </tr>
+        </table>
+        <h3>Reset Logs</h3>
+        <form action="/reset_logs" method="post">
+            <div class="form-group">
+                <label for="log_type">Log Type:</label>
+                <select id="log_type" name="log_type">
+                    <option value="all">All Logs</option>
+                    <option value="requests">Request Logs</option>
+                    <option value="responses">Response Logs</option>
+                    <option value="pcap">PCAP Logs</option>
+                </select>
+            </div>
+            <button type="submit" class="danger">Reset Logs</button>
+        </form>
+    </div>
+    
+    <div class="container">
+        <h2>Blocked IPs Management</h2>
+        <p>Currently blocked IPs: <strong>{{ blocked_count }}</strong></p>
+        <form action="/clear_blocked_ips" method="post">
+            <button type="submit" class="danger">Clear All Blocked IPs</button>
+        </form>
+        <p><a href="/view_blocked_ips">View and manage blocked IPs</a></p>
+    </div>
+</body>
+</html>

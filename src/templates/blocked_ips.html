@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Blocked IPs - WAF Admin Panel</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        .container {
+            background-color: white;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .flash {
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .flash.success {
+            background-color: #dff0d8;
+            color: #3c763d;
+        }
+        .flash.error {
+            background-color: #f2dede;
+            color: #a94442;
+        }
+        button {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .nav {
+            display: flex;
+            background-color: #333;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .nav a {
+            color: white;
+            padding: 10px 15px;
+            text-decoration: none;
+            margin-right: 5px;
+        }
+        .nav a:hover {
+            background-color: #555;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="nav">
+        <a href="/">Home</a>
+        <a href="/view_blocked_ips">View Blocked IPs</a>
+    </div>
+    
+    <h1>Blocked IPs</h1>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash {{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    <div class="container">
+        {% if blocked_ips %}
+            <table>
+                <tr>
+                    <th>IP Address</th>
+                    <th>Domain</th>
+                    <th>Time Remaining</th>
+                    <th>Actions</th>
+                </tr>
+                {% for key, data in blocked_ips.items() %}
+                    <tr>
+                        <td>{{ data.ip }}</td>
+                        <td>{{ data.domain }}</td>
+                        <td>{{ data.time_left }}</td>
+                        <td>
+                            <form action="/unblock_ip" method="post">
+                                <input type="hidden" name="key" value="{{ key }}">
+                                <button type="submit">Unblock</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </table>
+        {% else %}
+            <p>No IPs are currently blocked.</p>
+        {% endif %}
+        
+        <p><a href="/">Back to Admin Panel</a></p>
+    </div>
+</body>
+</html>

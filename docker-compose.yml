@@ -1,0 +1,19 @@
+services:
+  proxy:
+    build: .
+    container_name: proxy-server
+    ports:
+      - "8080:8080" # Forward proxy server port
+#      - "80:80"     # Forward web interface port
+    volumes:
+      - ./.mitmproxy:/root/.mitmproxy # Map certificate directory between host and container
+      - ./log:/app/log # Map logs between host and container
+      - ./src:/app/src
+    restart: always
+
+#  dvwa:
+#    image: vulnerables/web-dvwa:latest
+#    container_name: web-dvwa
+#    ports:
+#      - "8081:80"
+#    restart: always
